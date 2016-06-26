@@ -43,8 +43,8 @@
         Map, CSVLayer, Color, SimpleMarkerSymbol, SimpleRenderer, InfoTemplate, HeatmapRenderer, on, dom
       ) {
         map = new Map("map", {
-          basemap: "streets",
-          minZoom: 11,
+          basemap: "satellite",
+          minZoom: 12,
           zoom: 15
         });
 //
@@ -63,13 +63,20 @@
         csv.setRenderer(renderer);
         map.addLayer(csv);
 
-        var convertTime = function(epochTime) {
-          return new Date(epochTime);
+        convertTime = function(value, key, data) {
+          var date = new Date(value*1000);
+          return date.toLocaleString();
         };
 
+        convertCrime = function(value, key, data) {
+          return value.replace(/\w\S*/g, function(txt){
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+          });
+        };
         var template = new InfoTemplate("Crime Information");
         template.setContent("<b>Latitude</b>: ${latitude}" +
-                "<br><b>Longitude</b>: ${longitude}</br>");
+                "<br><b>Longitude</b>: ${longitude}" + "<br><b>Time of Incident</b>: ${time:convertTime}" +
+                "</br><b>Crime</b>: ${type_crime:convertCrime}");
         csv.setInfoTemplate(template);
 
 
@@ -101,7 +108,7 @@
         <h3 class="panel-title">Blur Radius</h3>
       </div>
       <div class="panel-body">
-        <input id="blurControl" type="range" max=20 min=0 value=10 step=1/>
+        <input id="blurControl" type="range" max=20 min=0 value=10 step=.5/>
       </div>
     </div>
   </body>
