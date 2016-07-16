@@ -11,10 +11,10 @@ def add_user():
 		user = User(username, password, name, phone, team)
 		user.insert_into_db()
 		if user is not None:
-			return jsonify(success=1, user=user.serialize)
+			return jsonify(success=0, user=user.serialize)
 		else:
-			return jsonify(success=0, error='username exists')
-	return jsonify(success=0, error='check arguments')
+			return jsonify(success=1, error='username exists')
+	return jsonify(success=1, error='check arguments')
 
 def authenticate_user():
 	try:
@@ -23,6 +23,6 @@ def authenticate_user():
 		user = User.query.filter_by(username=username, password=password).first()
 		if user is not None:
 			return jsonify(success=0, user=user.serialize)
-		return jsonify(success=1, error='Authenication error')
+		return jsonify(success=0, error='Authenication error')
 	except:
 		return jsonify(success=1, error='Server is down')

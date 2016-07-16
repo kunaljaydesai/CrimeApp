@@ -20,4 +20,4 @@ def get_reports():
 		list_of_reports = Reports.query.all()
 		return jsonify(success=0, reports=[report.serialize for report in list_of_reports])
 	except:
-		return jsonify(success=0, error='database issue')
+		return jsonify(success=1, error='database issue')
