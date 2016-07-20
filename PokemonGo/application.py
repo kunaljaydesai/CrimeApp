@@ -9,19 +9,13 @@ application.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:crimeapp@crime.cnf
 application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(application)
 
-@application.before_first_request
-def create_tables():
-	print('creating tables')
-	db.create_all()
-	db.session.commit()
-	print('created tables')
-
 ###API
 
 #reports
 
 application.add_url_rule('/api/reports/add', view_func=reports.add_report)
 application.add_url_rule('/api/reports/get', view_func=reports.get_reports)
+application.add_url_rule('/api/reports/filter', view_func=reports.get_reports_filter)
 
 #users
 

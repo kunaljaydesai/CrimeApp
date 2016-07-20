@@ -55,14 +55,18 @@ class Reports(db.Model):
 
 	@property
 	def serialize(self):
-		return {
+		serial = {
 			'id' : self.id,
 			'timestamp' : self.timestamp,
 			'latitude' : self.latitude,
 			'longitude' : self.longitude,
 			'pokemon' : self.pokemon,
-			'user' : User.query.filter_by(id=self.user).first().serialize,
+			'user' : None
 		}
+		user = User.query.filter_by(id=self.user).first()
+		if user is not None:
+			serial['user'] = user.serialize
+		return serial
 
 	def insert_into_db(self):
 		db.session.add(self)
