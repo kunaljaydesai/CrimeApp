@@ -28,7 +28,7 @@ def send_notification():
 		for notification in notifications:
 			pokemon = notification.pokemon
 			report = Reports.query.filter(Reports.latitude > latitude + block_dim).filter(Reports.latitude < latitude - block_dim).filter(Reports.longitude > longitude - block_dim).filter(Reports.longitude < longitude + block_dim).filter(Reports.pokemon == pokemon).first()
-			#if report is not None:
-			#	TwilioClient.send_message_to(pokemon=pokemon, latitude=latitude, longitude=longitude, to=user.phone)
+			if report is not None:
+				TwilioClient.send_message_to(pokemon=pokemon, latitude=latitude, longitude=longitude, to=user.phone)
 		return jsonify(success=0)
 	return jsonify(success=1)
