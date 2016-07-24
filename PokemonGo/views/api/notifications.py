@@ -42,14 +42,20 @@ def send_notification():
 		notifications = Notifications.query.filter_by(user=user.id).all()
 		latitude = float(latitude)
 		longitude = float(longitude)
+		pokemon_name_list = []
 		for notification in notifications:
 			print('notifications')
 			pokemon = notification.pokemon
 			print(pokemon)
 			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).first()
 			if report is not None:
-				print('there is a report')
-				send_APN(curr_dir + "/pushcert.pem", '3aba425abe4476b2fa5ceec8f45887e0139d5a357a63d190f8670e1ffd618155', pokemonList[int(pokemon)])
+				pokemon_name_list.append(pokemonList[int(notification.pokemon)])
+			if len(pokemon_name_list) > 3:
+				pokemon_name_list.append("and more")
+				break
+		if len(pokemon_name_list) > 0:
+			pokemon_name_list = str(pokemon_name_list).strip('[]').replace("'", "")
+			send_APN(curr_dir + "/pushcert.pem", '3aba425abe4476b2fa5ceec8f45887e0139d5a357a63d190f8670e1ffd618155', pokemon_name_list)
 		return jsonify(success=0)
 	return jsonify(success=1)
 
