@@ -5,6 +5,8 @@ import random
 from apns import APNs, Frame, Payload
 import os 
 
+pokemonList = ["bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise", "caterpie", "metapod", "butterfree", "weedle", "kakuna", "beedrill", "pidgey", "pidgeotto", "pidgeot", "rattata", "raticate", "spearow", "fearow", "ekans", "arbok", "pikachu", "raichu", "sandshrew", "sandslash", "nidoran-f", "nidorina", "nidoqueen", "nidoran-m", "nidorino", "nidoking", "clefairy", "clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff", "zubat", "golbat", "oddish", "gloom", "vileplume", "paras", "parasect", "venonat", "venomoth", "diglett", "dugtrio", "meowth", "persian", "psyduck", "golduck", "mankey", "primeape", "growlithe", "arcanine", "poliwag", "poliwhirl", "poliwrath", "abra", "kadabra", "alakazam", "machop", "machoke", "machamp", "bellsprout", "weepinbell", "victreebel", "tentacool", "tentacruel", "geodude", "graveler", "golem", "ponyta", "rapidash", "slowpoke", "magnemite", "magneton", "farfetchd", "doduo", "dodrio", "seel", "dewgong", "grimer", "muk", "shellder", "cloyster", "gastly", "haunter", "gengar", "onix", "drowzee", "hypno", "krabby", "kingler", "voltorb", "electrode", "exeggcute", "exeggutor", "cubone", "marowak", "hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", "rhyhorn", "rhydon", "chansey", "tangela", "kangaskhan", "horsea", "seadra", "goldeen", "seaking", "staryu", "starmie", "mr-mime", "scyther", "jynx", "electabuzz", "magmar", "pinsir", "tauros", "magikarp", "gyarados", "lapras", "ditto", "eevee", "vaporeon", "jolteon", "flareon", "porygon", "omanyte", "omastar", "kabuto", "kabutops", "aerodactyl", "snorlax", "articuno","zapdos", "moltres", "dratini", "dragonair", "dragonite", "mewtwo", "mew"]
+
 def add_notification():
 	user = request.args.get('user')
 	pokemon = request.args.get('pokemon')
@@ -47,18 +49,18 @@ def send_notification():
 			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).first()
 			if report is not None:
 				print('there is a report')
-				send_APN(curr_dir + "/pushcert.pem", '3aba425abe4476b2fa5ceec8f45887e0139d5a357a63d190f8670e1ffd618155')
+				send_APN(curr_dir + "/pushcert.pem", '3aba425abe4476b2fa5ceec8f45887e0139d5a357a63d190f8670e1ffd618155', pokemonList[int(pokemon)])
 		return jsonify(success=0)
 	return jsonify(success=1)
 
 def response_listener(error_response):
 	print(error_response)
 
-def send_APN(directory, device_token):
+def send_APN(directory, device_token, pokemon):
 	apns = APNs(use_sandbox = True, cert_file=directory, enhanced=True)
 	identifier = random.getrandbits(32)
 	token_hex = device_token
-	payload = Payload(alert="pushcert.pem", sound="default", badge=1)
+	payload = Payload(alert=pokemon + " was found near you!", sound="default", badge=1)
 	apns.gateway_server.register_response_listener(response_listener)
 	apns.gateway_server.send_notification(token_hex, payload, identifier=identifier)
 
