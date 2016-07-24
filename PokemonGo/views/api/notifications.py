@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from models import Notifications, Reports, User
+from models import Notifications, Reports, User, db
 from views.api_wrappers.twilio_client import TwilioClient
 
 def add_notification():
@@ -9,6 +9,15 @@ def add_notification():
 		notification = Notifications(user, pokemon)
 		notif = notification.insert_into_db()
 		return jsonify(success=0, notification=notif)
+	return jsonify(success=1, error='check args')
+
+def delete_notification():
+	user = request.args.get('user')
+	pokemon = request.args.get('pokemon')
+	if user is not None and pokemon is not None:
+		Notifications.query.filter_by(user=user, pokemon=pokemon).delete()
+		db.session.commit()
+		return jsonify(success=0)
 	return jsonify(success=1, error='check args')
 
 def get_notification():

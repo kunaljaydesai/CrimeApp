@@ -27,6 +27,7 @@ application.add_url_rule('/api/users/authenticate', view_func=users.authenticate
 application.add_url_rule('/api/notifications/add', view_func=notifications.add_notification)
 application.add_url_rule('/api/notifications/get', view_func=notifications.get_notification)
 application.add_url_rule('/api/notifications/send', view_func=notifications.send_notification)
+application.add_url_rule('/api/notifications/delete', view_func=notifications.delete_notification)
 
 if __name__ == "__main__":
 	application.run(host="0.0.0.0", port=80, debug=True)
