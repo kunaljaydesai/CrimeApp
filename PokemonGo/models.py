@@ -11,13 +11,15 @@ class User(db.Model):
 	name = db.Column(db.String(80))
 	phone = db.Column(db.BigInteger)
 	team = db.Column(db.Integer)
+	device_token = db.Column(db.String(80))
 
-	def __init__(self, username, password, name, phone, team):
+	def __init__(self, username, password, name, phone, team, device_token=""):
 		self.username = username
 		self.password = password
 		self.name = name
 		self.phone = phone
 		self.team = team
+		self.device_token = ""
 
 	@property
 	def serialize(self):
@@ -27,7 +29,8 @@ class User(db.Model):
 			'password' : self.password,
 			'name' : self.name,
 			'phone' : self.phone,
-			'team' : self.team
+			'team' : self.team,
+			'device_token' : self.device_token
 		}
 
 	def insert_into_db(self):
@@ -36,6 +39,10 @@ class User(db.Model):
 			db.session.add(self)
 			db.session.commit()
 			return self.serialize
+
+	def update_device_token(self, device_token):
+		self.device_token = device_token
+		db.session.commit()
 
 class Reports(db.Model):
 

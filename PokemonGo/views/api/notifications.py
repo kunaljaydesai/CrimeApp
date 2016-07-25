@@ -55,7 +55,9 @@ def send_notification():
 				break
 		if len(pokemon_name_list) > 0:
 			pokemon_name_list = str(pokemon_name_list).strip('[]').replace("'", "")
-			send_APN(curr_dir + "/pushcert.pem", '3aba425abe4476b2fa5ceec8f45887e0139d5a357a63d190f8670e1ffd618155', pokemon_name_list)
+			print(user.device_token)
+			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemon_name_list)
+		print(pokemon_name_list)
 		return jsonify(success=0)
 	return jsonify(success=1)
 
@@ -69,5 +71,14 @@ def send_APN(directory, device_token, pokemon):
 	payload = Payload(alert=pokemon + " was found near you!", sound="default", badge=1)
 	apns.gateway_server.register_response_listener(response_listener)
 	apns.gateway_server.send_notification(token_hex, payload, identifier=identifier)
+
+def add_device_token():
+	device_token = request.args.get('dt')
+	user = request.args.get('user')
+	if device_token is not None and user is not None:
+		user = User.query.filter_by(id=user).first()
+		user.update_device_token(device_token)
+		return jsonify(success=0)
+	return jsonify(success=1, error='check args')
 
 
