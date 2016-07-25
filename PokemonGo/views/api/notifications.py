@@ -4,6 +4,7 @@ import time
 import random
 from apns import APNs, Frame, Payload
 import os 
+import calendar
 
 pokemonList = ["bulbasaur", "ivysaur", "venusaur", "charmander", "charmeleon", "charizard", "squirtle", "wartortle", "blastoise", "caterpie", "metapod", "butterfree", "weedle", "kakuna", "beedrill", "pidgey", "pidgeotto", "pidgeot", "rattata", "raticate", "spearow", "fearow", "ekans", "arbok", "pikachu", "raichu", "sandshrew", "sandslash", "nidoran-f", "nidorina", "nidoqueen", "nidoran-m", "nidorino", "nidoking", "clefairy", "clefable", "vulpix", "ninetales", "jigglypuff", "wigglytuff", "zubat", "golbat", "oddish", "gloom", "vileplume", "paras", "parasect", "venonat", "venomoth", "diglett", "dugtrio", "meowth", "persian", "psyduck", "golduck", "mankey", "primeape", "growlithe", "arcanine", "poliwag", "poliwhirl", "poliwrath", "abra", "kadabra", "alakazam", "machop", "machoke", "machamp", "bellsprout", "weepinbell", "victreebel", "tentacool", "tentacruel", "geodude", "graveler", "golem", "ponyta", "rapidash", "slowpoke", "magnemite", "magneton", "farfetchd", "doduo", "dodrio", "seel", "dewgong", "grimer", "muk", "shellder", "cloyster", "gastly", "haunter", "gengar", "onix", "drowzee", "hypno", "krabby", "kingler", "voltorb", "electrode", "exeggcute", "exeggutor", "cubone", "marowak", "hitmonlee", "hitmonchan", "lickitung", "koffing", "weezing", "rhyhorn", "rhydon", "chansey", "tangela", "kangaskhan", "horsea", "seadra", "goldeen", "seaking", "staryu", "starmie", "mr-mime", "scyther", "jynx", "electabuzz", "magmar", "pinsir", "tauros", "magikarp", "gyarados", "lapras", "ditto", "eevee", "vaporeon", "jolteon", "flareon", "porygon", "omanyte", "omastar", "kabuto", "kabutops", "aerodactyl", "snorlax", "articuno","zapdos", "moltres", "dratini", "dragonair", "dragonite", "mewtwo", "mew"]
 
@@ -42,12 +43,13 @@ def send_notification():
 		notifications = Notifications.query.filter_by(user=user.id).all()
 		latitude = float(latitude)
 		longitude = float(longitude)
+		user.update_location(latitude, longitude)
 		pokemon_name_list = []
 		for notification in notifications:
 			print('notifications')
 			pokemon = notification.pokemon
 			print(pokemon)
-			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).first()
+			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).filter(Reports.timestamp >= calendar.timegm(time.gmtime()) - 60 * 30).first()
 			if report is not None:
 				pokemon_name_list.append(pokemonList[int(notification.pokemon)])
 			if len(pokemon_name_list) > 3:
@@ -55,8 +57,7 @@ def send_notification():
 				break
 		if len(pokemon_name_list) > 0:
 			pokemon_name_list = str(pokemon_name_list).strip('[]').replace("'", "")
-			print(user.device_token)
-			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemon_name_list)
+			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemonList[int(pokemon)])
 		print(pokemon_name_list)
 		return jsonify(success=0)
 	return jsonify(success=1)

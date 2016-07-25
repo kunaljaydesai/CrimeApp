@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 import time
+import calendar
 
 db = SQLAlchemy()
 
@@ -12,14 +13,18 @@ class User(db.Model):
 	phone = db.Column(db.BigInteger)
 	team = db.Column(db.Integer)
 	device_token = db.Column(db.String(80))
+	latitude = db.Column(db.Float)
+	longitude = db.Column(db.Float)
 
-	def __init__(self, username, password, name, phone, team, device_token=""):
+	def __init__(self, username, password, name, phone, team, device_token="", latitude=0, longitude=0):
 		self.username = username
 		self.password = password
 		self.name = name
 		self.phone = phone
 		self.team = team
 		self.device_token = ""
+		self.latitude = latitude
+		self.longitude = longitude
 
 	@property
 	def serialize(self):
@@ -44,6 +49,11 @@ class User(db.Model):
 		self.device_token = device_token
 		db.session.commit()
 
+	def update_location(self, latitude, longitude):
+		self.latitude = latitude
+		self.longitude = longitude
+		db.session.commit()
+
 class Reports(db.Model):
 
 	id = db.Column(db.Integer, primary_key=True)
@@ -54,7 +64,7 @@ class Reports(db.Model):
 	user = db.Column(db.Integer)
 
 	def __init__(self, latitude, longitude, pokemon, user_id=-1):
-		self.timestamp = time.time()
+		self.timestamp = calendar.timegm(time.gmtime())
 		self.latitude = latitude
 		self.longitude = longitude
 		self.pokemon = pokemon
