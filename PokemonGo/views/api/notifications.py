@@ -36,7 +36,7 @@ def send_notification():
 	user = request.args.get('user')
 	latitude = request.args.get('latitude')
 	longitude = request.args.get('longitude')
-	block_dim = 0.00027472527473
+	block_dim = 0.01
 	curr_dir = os.path.dirname(os.path.realpath(__file__))
 	if user is not None and latitude is not None and longitude is not None:
 		user = User.query.filter_by(id=user).first()
@@ -48,7 +48,6 @@ def send_notification():
 		for notification in notifications:
 			print('notifications')
 			pokemon = notification.pokemon
-			print(pokemon)
 			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).filter(Reports.timestamp >= calendar.timegm(time.gmtime()) - 60 * 30).first()
 			if report is not None:
 				pokemon_name_list.append(pokemonList[int(notification.pokemon)])
@@ -57,7 +56,7 @@ def send_notification():
 				break
 		if len(pokemon_name_list) > 0:
 			pokemon_name_list = str(pokemon_name_list).strip('[]').replace("'", "")
-			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemonList[int(pokemon)])
+			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemon_name_list)
 		print(pokemon_name_list)
 		return jsonify(success=0)
 	return jsonify(success=1)
@@ -65,13 +64,18 @@ def send_notification():
 def response_listener(error_response):
 	print(error_response)
 
+def failure(key, reason):
+	print("Key: " + key)
+	print("Reason: " + reason)
+
 def send_APN(directory, device_token, pokemon):
 	apns = APNs(use_sandbox = True, cert_file=directory, enhanced=True)
 	identifier = random.getrandbits(32)
 	token_hex = device_token
+	print(token_hex)
 	payload = Payload(alert=pokemon + " was found near you!", sound="default", badge=1)
 	apns.gateway_server.register_response_listener(response_listener)
-	apns.gateway_server.send_notification(token_hex, payload, identifier=identifier)
+	print(apns.gateway_server.send_notification(token_hex, payload, identifier=identifier))
 
 def add_device_token():
 	device_token = request.args.get('dt')

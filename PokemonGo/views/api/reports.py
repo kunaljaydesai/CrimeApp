@@ -18,7 +18,7 @@ def add_report():
 		longitude = float(longitude)
 		report = Reports(latitude, longitude, pokemon, user_id=user_id)
 		id = report.insert_into_db()
-		block_dim = 0.00027472527473
+		block_dim = 0.01
 		users_in_radius = User.query.filter(User.latitude <= latitude  + block_dim ).filter(User.latitude >= latitude - block_dim).filter(User.longitude >= longitude - block_dim).filter(User.longitude <= longitude + block_dim).all()
 		for user in users_in_radius:
 			notification = Notifications.query.filter_by(user=user.id, pokemon=pokemon).first()
