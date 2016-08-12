@@ -15,6 +15,7 @@ class User(db.Model):
 	device_token = db.Column(db.String(80))
 	latitude = db.Column(db.Float)
 	longitude = db.Column(db.Float)
+	rating = db.Column(db.Integer)
 
 	def __init__(self, username, password, name, phone, team, device_token="", latitude=0, longitude=0):
 		self.username = username
@@ -25,6 +26,7 @@ class User(db.Model):
 		self.device_token = ""
 		self.latitude = latitude
 		self.longitude = longitude
+		self.rating = 0
 
 	@property
 	def serialize(self):
@@ -35,7 +37,8 @@ class User(db.Model):
 			'name' : self.name,
 			'phone' : self.phone,
 			'team' : self.team,
-			'device_token' : self.device_token
+			'device_token' : self.device_token,
+			'rating' : self.rating
 		}
 
 	def insert_into_db(self):
@@ -54,6 +57,10 @@ class User(db.Model):
 		self.longitude = longitude
 		db.session.commit()
 
+	def update_rating(self, rating):
+		self.rating = int(self.rating) + rating
+		db.session.commit()
+
 class Reports(db.Model):
 
 	id = db.Column(db.Integer, primary_key=True)
@@ -62,6 +69,8 @@ class Reports(db.Model):
 	longitude = db.Column(db.Float(precision=64))
 	pokemon = db.Column(db.Integer)
 	user = db.Column(db.Integer)
+	upvote = db.Column(db.Integer)
+	downvote = db.Column(db.Integer)
 
 	def __init__(self, latitude, longitude, pokemon, user_id=-1):
 		self.timestamp = calendar.timegm(time.gmtime())
@@ -69,6 +78,8 @@ class Reports(db.Model):
 		self.longitude = longitude
 		self.pokemon = pokemon
 		self.user = user_id
+		self.upvote = 0
+		self.downvote = 0
 
 	@property
 	def serialize(self):
@@ -78,7 +89,9 @@ class Reports(db.Model):
 			'latitude' : self.latitude,
 			'longitude' : self.longitude,
 			'pokemon' : self.pokemon,
-			'user' : None
+			'user' : None,
+			'downvote' : self.downvote,
+			'upvote' : self.upvote
 		}
 		user = User.query.filter_by(id=self.user).first()
 		if user is not None:
@@ -89,6 +102,46 @@ class Reports(db.Model):
 		db.session.add(self)
 		db.session.commit()
 		return self.id
+
+	def up_vote(self):
+		self.upvote = int(self.upvote) + 1
+		user = User.query.filter_by(id=self.user).first()
+		if user is not None:
+			user.update_rating(1)
+		db.session.commit()
+
+	def down_vote(self):
+		self.downvote = int(self.downvote) + 1
+		user = User.query.filter_by(id=self.user).first()
+		if user is not None:
+			user.update_rating(-1)
+		db.session.commit()
+
+class Vote(db.Model):
+
+	id = db.Column(db.Integer, primary_key=True)
+	user = db.Column(db.Integer)
+	report = db.Column(db.Integer)
+	type_vote = db.Column(db.Integer)
+
+	def __init__(self, user, report, type_vote=0):
+		self.user = user
+		self.report = report
+		self.type_vote = type_vote
+
+	def insert_into_db(self):
+		db.session.add(self)
+		db.session.commit()
+		return self.id
+
+	@property
+	def serialize():
+		return {
+			'id' : self.id,
+			'user' : User.query.filter_by(id=self.user).first().serialize,
+			'report' : Reports.query.filter_by(id=self.report).first().serialize,
+			'type' : self.type_vote
+		}
 
 class Notifications(db.Model):
 

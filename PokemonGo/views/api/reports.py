@@ -1,5 +1,5 @@
 from flask import request, jsonify	
-from models import Reports, User, Notifications
+from models import Reports, User, Notifications, Vote
 import random
 from apns import APNs, Frame, Payload
 import os
@@ -21,17 +21,33 @@ def add_report():
 		block_dim = 0.01
 		users_in_radius = User.query.filter(User.latitude <= latitude  + block_dim ).filter(User.latitude >= latitude - block_dim).filter(User.longitude >= longitude - block_dim).filter(User.longitude <= longitude + block_dim).all()
 		for user in users_in_radius:
+			print(str(user.username) + " is in radius.")
 			notification = Notifications.query.filter_by(user=user.id, pokemon=pokemon).first()
 			if notification is not None:
 				curr_dir = os.path.dirname(os.path.realpath(__file__)) + "/pushcert.pem"
-				send_APN(curr_dir, user.device_token, pokemonList[int(pokemon)])
+				send_APN(curr_dir, user.device_token, pokemonList[int(pokemon)] + " was reported near you!")
 		return jsonify(success=0, report=report.serialize)
 	return jsonify(success=1, error='check request params')
 
 def get_reports():
+	id = request.args.get('id')
+	user_id = request.args.get('user_id')
 	try:
-		list_of_reports = Reports.query.all()
-		return jsonify(success=0, reports=[report.serialize for report in list_of_reports])
+		if id is None:
+			list_of_reports = Reports.query.all()
+			return jsonify(success=0, reports=[report.serialize for report in list_of_reports])
+		elif id is not None and user_id is not None:
+			report = Reports.query.filter_by(id=id).first()
+			serialized_report = report.serialize
+			vote = Vote.query.filter_by(user=user_id, report=report.id).first()
+			print(vote)
+			if vote is not None:
+				serialized_report['voted'] = vote.type_vote
+			else:
+				serialized_report['voted'] = 0
+			return jsonify(success=0, report=serialized_report)
+		else:
+			return jsonify(success=1, error='database issue')
 	except:
 		return jsonify(success=1, error='database issue')
 
@@ -54,6 +70,24 @@ def send_APN(directory, device_token, pokemon):
 	apns = APNs(use_sandbox = True, cert_file=directory, enhanced=True)
 	identifier = random.getrandbits(32)
 	token_hex = device_token
-	payload = Payload(alert=pokemon + " was found near you!", sound="default", badge=1)
+	payload = Payload(alert=pokemon, sound="default", badge=1)
 	apns.gateway_server.register_response_listener(response_listener)
 	apns.gateway_server.send_notification(token_hex, payload, identifier=identifier)
+
+def upvote():
+	id = request.args.get('id')
+	user_id = request.args.get('user_id')
+	report = Reports.query.filter_by(id=id).first()
+	Vote(user_id, report.id, type_vote=1).insert_into_db()
+	if report is not None:
+		report.up_vote()
+	return jsonify(success=0)
+
+def downvote():
+	id = request.args.get('id')
+	user_id = request.args.get('user_id')
+	report = Reports.query.filter_by(id=id).first()
+	Vote(user_id, report.id, type_vote=2).insert_into_db()
+	if report is not None:
+		report.down_vote()
+	return jsonify(success=0)

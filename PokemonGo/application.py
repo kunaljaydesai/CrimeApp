@@ -16,6 +16,8 @@ db.init_app(application)
 application.add_url_rule('/api/reports/add', view_func=reports.add_report)
 application.add_url_rule('/api/reports/get', view_func=reports.get_reports)
 application.add_url_rule('/api/reports/filter', view_func=reports.get_reports_filter)
+application.add_url_rule('/api/reports/upvote', view_func=reports.upvote)
+application.add_url_rule('/api/reports/downvote', view_func=reports.downvote)
 
 #users
 

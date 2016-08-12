@@ -36,28 +36,12 @@ def send_notification():
 	user = request.args.get('user')
 	latitude = request.args.get('latitude')
 	longitude = request.args.get('longitude')
-	block_dim = 0.01
 	curr_dir = os.path.dirname(os.path.realpath(__file__))
 	if user is not None and latitude is not None and longitude is not None:
 		user = User.query.filter_by(id=user).first()
-		notifications = Notifications.query.filter_by(user=user.id).all()
 		latitude = float(latitude)
 		longitude = float(longitude)
 		user.update_location(latitude, longitude)
-		pokemon_name_list = []
-		for notification in notifications:
-			print('notifications')
-			pokemon = notification.pokemon
-			report = Reports.query.filter(Reports.latitude <= latitude  + block_dim ).filter(Reports.latitude >= latitude - block_dim).filter(Reports.longitude >= longitude - block_dim).filter(Reports.longitude <= longitude + block_dim).filter(Reports.pokemon == pokemon).filter(Reports.timestamp >= calendar.timegm(time.gmtime()) - 60 * 30).first()
-			if report is not None:
-				pokemon_name_list.append(pokemonList[int(notification.pokemon)])
-			if len(pokemon_name_list) > 3:
-				pokemon_name_list.append("and more")
-				break
-		if len(pokemon_name_list) > 0:
-			pokemon_name_list = str(pokemon_name_list).strip('[]').replace("'", "")
-			send_APN(curr_dir + "/pushcert.pem", user.device_token, pokemon_name_list)
-		print(pokemon_name_list)
 		return jsonify(success=0)
 	return jsonify(success=1)
 
